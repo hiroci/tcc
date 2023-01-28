@@ -9,7 +9,8 @@
 const char *ssid = "ISHIDA";          // your network SSID
 const char *password = "hiro1234567"; // your network password
 const char *myDomain = "script.google.com";
-const char* serverName = "http://192.168.15.7:8080";;
+const char *serverName = "http://192.168.15.7:8080";
+;
 String myScript = "/macros/s/XXXXXXXXXXXXXXXXXXXXXX/exec"; // Replace with your own url
 String myFilename = "filename=ESP32-CAM.jpg";
 String mimeType = "&mimetype=image/jpeg";
@@ -37,6 +38,8 @@ int waitingTime = 30000; // Wait 30 seconds to google response.
 
 void saveCapturedImage();
 String urlencode(String);
+
+#define infrared 13
 
 void setup()
 {
@@ -85,8 +88,8 @@ void setup()
   config.pin_reset = RESET_GPIO_NUM;
   config.xclk_freq_hz = 20000000;
   config.frame_size = FRAMESIZE_UXGA;
-  config.pixel_format = PIXFORMAT_JPEG; // for streaming
-  // config.pixel_format = PIXFORMAT_RGB565; // for face detection/recognition
+  //config.pixel_format = PIXFORMAT_JPEG; // for streaming
+  config.pixel_format = PIXFORMAT_RGB565; // for face detection/recognition
   config.grab_mode = CAMERA_GRAB_WHEN_EMPTY;
   config.fb_location = CAMERA_FB_IN_PSRAM;
   config.jpeg_quality = 10;
@@ -129,29 +132,27 @@ void setup()
     delay(1000);
     ESP.restart();
   }
-}
 
-boolean enviar = true;
+  pinMode(infrared, INPUT);
+}
 
 void loop()
 {
-  // if(enviar) {
-  saveCapturedImage();
-  enviar = false;
-  delay(60000);
-  //}
+  if(digitalRead(infrared) == true){
+    saveCapturedImage();
+    delay(3000);
+  }
 }
 
 void saveCapturedImage()
 {
-  Serial.println("in func");
   WiFiClient client;
 
   camera_fb_t *fb = NULL;
   fb = esp_camera_fb_get();
   if (!fb)
   {
-    Serial.println("Camera capture failed");
+    Serial.println("Captura Falhou!");
     delay(1000);
     ESP.restart();
     return;
@@ -171,23 +172,22 @@ void saveCapturedImage()
   esp_camera_fb_return(fb);
 
   String image_photo = "";
-  for (int i = 0; i< imageFile.length(); i = i+1000) {
-      Serial.print(imageFile[i]);
-      image_photo += imageFile.substring(i, i+1000);
-    }
+  for (int i = 0; i < imageFile.length(); i = i + 1000)
+  {
+    image_photo += imageFile.substring(i, i + 1000);
+  }
 
   HTTPClient http;
 
   http.begin(client, serverName);
-      
-  // If you need an HTTP request with a content type: application/json, use the following:
+
   http.addHeader("Content-Type", "application/json");
   String post_data = "{\"id\":\"new-image\",\"image\":\"" + image_photo + "\"}";
   int httpResponseCode = http.POST(post_data);
 
   Serial.print("HTTP Response code: ");
   Serial.println(httpResponseCode);
-    
+
   // Free resources
   http.end();
 }
