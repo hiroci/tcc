@@ -6,8 +6,8 @@
 #include "Base64.h"
 #include <HTTPClient.h>
 
-const char *ssid = "ISHIDA";          // your network SSID
-const char *password = "hiro1234567"; // your network password
+const char *ssid = "";          // your network SSID
+const char *password = ""; // your network password
 const char *myDomain = "script.google.com";
 const char *serverName = "http://192.168.15.7:8080";
 ;
